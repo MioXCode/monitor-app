@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { LoginSchema } from "@/schema/auth";
 import Cookies from "js-cookie";
 import { LoginResponse } from "@/interface/LoginResponse";
+import { toast } from "sonner";
 
 export const useAuth = () => {
   const { mutate, error, isPending } = useMutation({
@@ -14,9 +15,10 @@ export const useAuth = () => {
       }),
     onSuccess: (data: LoginResponse) => {
       Cookies.set("token", data.data.token);
+      toast.success(data.message);
     },
     onError: (error) => {
-      console.error(error);
+      toast.error(error.message);
     },
   });
 
