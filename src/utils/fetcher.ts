@@ -17,6 +17,7 @@ export async function fetcher<TResponse, TBody = unknown>(
 
   let requestHeaders: HeadersInit = {
     "Content-Type": "application/json",
+    Accept: "application/json",
     ...headers,
   };
 
@@ -38,18 +39,26 @@ export async function fetcher<TResponse, TBody = unknown>(
     credentials: "include",
   };
 
-  if (body) {
-    requestOptions.body = JSON.stringify(body);
+  if (body && method !== "GET") {
+    requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, requestOptions);
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, requestOptions);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      message: "Terjadi kesalahan pada server",
-    }));
-    throw new Error(error.message || "Terjadi kesalahan pada server");
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: "Terjadi kesalahan pada server",
+      }));
+      throw new Error(error.message || "Terjadi kesalahan pada server");
+    }
+
+    return response.json();
+  } catch (error) {
+    console.log(error);
+    if (error instanceof TypeError && error.message.includes("NetworkError")) {
+      throw new Error("Koneksi gagal: Periksa koneksi internet Anda");
+    }
+    throw error;
   }
-
-  return response.json();
 }
